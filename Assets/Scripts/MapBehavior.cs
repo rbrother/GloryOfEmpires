@@ -3,24 +3,21 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 
-public static class MapConstants {
+public struct MapLocation {
     public const float TILE_RADIUS = 2.16f; // distance from center to any corner in unity-units
     public static readonly float TILE_HEIGHT = 2 * TILE_RADIUS * Mathf.Cos( Mathf.PI / 6 );
-    public const int GALAXY_SIZE = 4;
-}
 
-public struct MapLocation {
     public int LogicalX;
     public int LogicalY;
 
-    public float TableX { get { return LogicalX * MapConstants.TILE_RADIUS * 1.5f; } }
-    public float TableY { get { return ( LogicalX * 0.5f + LogicalY ) * MapConstants.TILE_HEIGHT; } }
+    public float TableX { get { return LogicalX * TILE_RADIUS * 1.5f; } }
+    public float TableY { get { return ( LogicalX * 0.5f + LogicalY ) * TILE_HEIGHT; } }
 
     public Vector3 TableXY { get { return new Vector3( TableX, TableY, 0 ); } }
 
     public bool IsOnTable(int tableWidth, int tableHeight) {
-        return Mathf.Abs( TableXY.x ) < MapConstants.TILE_RADIUS * 1.5f * tableWidth + 0.01 &&
-                            Mathf.Abs( TableXY.y ) < MapConstants.TILE_HEIGHT * tableHeight + 0.01;
+        return Mathf.Abs( TableX ) < TILE_RADIUS * 1.5f * tableWidth + 0.01 &&
+                            Mathf.Abs( TableY ) < TILE_HEIGHT * tableHeight + 0.01;
     }
 
     public string LocationName( int minLogicalX, int minLogicalY ) {
@@ -43,6 +40,7 @@ public class MapBehavior : MonoBehaviour {
 
     public const int TABLE_WIDTH = 7;
     public const int TABLE_HEIGHT = 5;
+    public const int GALAXY_SIZE = 4;
 
     void Start( ) {
         this.tiles = Resources.LoadAll<Sprite>( "Tiles" );
@@ -55,13 +53,13 @@ public class MapBehavior : MonoBehaviour {
             var sprite = tiles[Random.Range( 0, tiles.Length )];
             var newTile = Instantiate( preFab, loc.TableXY, Quaternion.identity ) as GameObject;
             newTile.transform.parent = Map.transform; // This makes the object child of the map!
-            if ( LogicalDistance( loc.LogicalX, loc.LogicalY ) <= MapConstants.GALAXY_SIZE ) {
+            if ( LogicalDistance( loc.LogicalX, loc.LogicalY ) <= GALAXY_SIZE ) {
                 newTile.GetComponent<SpriteRenderer>( ).sprite = sprite;
             }
             var textPrefab = Resources.Load<GameObject>( "TextPrefab" );
             var text = Instantiate( textPrefab, new Vector3( loc.TableX, loc.TableY, -0.1f ), Quaternion.identity ) as GameObject;
             text.GetComponent<TextMesh>( ).text = loc.LocationName( minLogicalX, minLogicalY );
-            // text.transform.parent = newTile.transform; // we would like to specify parent and position relative to parent, but trouble working
+            text.transform.parent = newTile.transform; // Text to be child of tile.
         }
 
     }
