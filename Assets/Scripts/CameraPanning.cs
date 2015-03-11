@@ -5,7 +5,7 @@ public class CameraPanning : MonoBehaviour {
 	private float targetCameraSize;
 	private Vector3 lastPosition;
 
-	private const float MAX_CAMERA_SIZE = 60.0f;
+	private const float MAX_CAMERA_SIZE = 30.0f;
 	private const float MIN_CAMERA_SIZE = 2.0f;
 
 	void Start () {
