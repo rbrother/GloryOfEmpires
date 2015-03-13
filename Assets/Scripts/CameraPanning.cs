@@ -22,10 +22,10 @@ public class CameraPanning : MonoBehaviour {
 		var deltaSize = (targetCameraSize - camera.orthographicSize);
 		camera.orthographicSize += deltaSize * Time.deltaTime * 5.0f;
 		// Panning with mouse button
-		if (Input.GetMouseButtonDown (0)) {
+		if (Input.GetMouseButtonDown (1)) {
 			lastPosition = Input.mousePosition;
 		}
-		if (Input.GetMouseButton (0)) {
+		if (Input.GetMouseButton (1)) {
 			var deltaPos = ( lastPosition - Input.mousePosition );
 			var deltaCamera = deltaPos * camera.orthographicSize * 2.0f / Screen.height;
 			transform.Translate( deltaCamera.x, deltaCamera.y, 0 );
