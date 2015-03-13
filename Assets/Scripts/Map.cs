@@ -15,15 +15,15 @@ namespace Net.Brotherus {
         public readonly int LogicalY;
         public readonly string LocationName;
 
-        public float TableX { get { return LogicalX * TILE_RADIUS * 1.5f; } }
-        public float TableY { get { return ( LogicalX * 0.5f + LogicalY ) * TILE_HEIGHT; } }
+        public float TableX { get { return LogicalToTableX( LogicalX, LogicalY ); } }
+        public float TableY { get { return LogicalToTableY( LogicalX, LogicalY ); } }
 
-        public static float LogicalToTableX( int logicalX, int logicalY ) { return logicalX * TILE_RADIUS * 1.5f; }
-        public static float LogicalToTableY( int logicalX, int logicalY ) { return ( logicalX * 0.5f + logicalY ) * TILE_HEIGHT; }
+        private static float LogicalToTableX( int logicalX, int logicalY ) { return logicalX * TILE_RADIUS * 1.5f; }
+        private static float LogicalToTableY( int logicalX, int logicalY ) { return ( logicalX * 0.5f + logicalY ) * TILE_HEIGHT; }
 
         public static bool IsOnTable( int logicalX, int logicalY, int tableWidth, int tableHeight ) {
-            float mapX = MapLocation.LogicalToTableX( logicalX, logicalY );
-            float mapY = MapLocation.LogicalToTableY( logicalX, logicalY );
+            float mapX = LogicalToTableX( logicalX, logicalY );
+            float mapY = LogicalToTableY( logicalX, logicalY );
             return Mathf.Abs( mapX ) < TILE_RADIUS * 1.5f * tableWidth + 0.01 &&
                                 Mathf.Abs( mapY ) < TILE_HEIGHT * tableHeight + 0.01;
         }
@@ -46,10 +46,6 @@ namespace Net.Brotherus {
 
     public struct Map {
         private static Map currentMap;
-        private readonly int width;
-        private readonly int height;
-        private readonly int minLogicalX;
-        private readonly int minLogicalY;
         private MapLocation[] locations;
 
         public static Map CurrentMap { get { return currentMap; } }
@@ -57,8 +53,6 @@ namespace Net.Brotherus {
         public MapLocation[] Locations { get { return this.locations; } }
 
         public Map( int width, int height ) {
-            this.width = width;
-            this.height = height;
             var areaSize = width + height;
             var rawLocations =
                 Enumerable.Range( -areaSize, areaSize * 2 ).SelectMany(
@@ -68,8 +62,6 @@ namespace Net.Brotherus {
             var minX = rawLocations.Min( loc => loc.logicalX );
             var minY = rawLocations.Min( loc => loc.logicalY );
             this.locations = rawLocations.Select( loc => new MapLocation( loc.logicalX, loc.logicalY, minX, minY ) ).ToArray( );
-            this.minLogicalX = minX;
-            this.minLogicalY = minY;
             currentMap = this;
         }
 

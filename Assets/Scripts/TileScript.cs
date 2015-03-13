@@ -23,7 +23,6 @@ public class TileScript : MonoBehaviour {
 
     public void OnMouseDown( ) {
         this.dragging = true;
-        var pos = this.gameObject.transform.position;
         this.gameObject.transform.Translate( 0, 0, -1 );
         lastPosition = Input.mousePosition;
     }
