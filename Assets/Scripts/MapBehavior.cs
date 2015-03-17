@@ -12,22 +12,36 @@ public class MapBehavior : MonoBehaviour {
 
     public const int GALAXY_SIZE = 4;
 
+    private string[] setupTileNames = new string[] { "Red", "Yellow", 
+        "LightBlue", "MediumBlue", "DarkBlue" };
+
     void Start( ) {
-        var map = new Map( width: 7, height: 5 ); // Sets singleton
-        this.tiles = Resources.LoadAll<Sprite>( "Tiles" );
+        var map = new Map( width: 4, height: 4 ); // Sets singleton
         var backgroundPreFab = Resources.Load<GameObject>( "BackgroundPrefab" );
         var preFab = Resources.Load<GameObject>( "TilePrefab" );
 
         foreach ( var loc in map.Locations ) {
-            var sprite = tiles[Random.Range( 0, tiles.Length )];
             var backgroundTile = Instantiate( backgroundPreFab, loc.TableXY( 1 ), Quaternion.identity ) as GameObject;
             backgroundTile.transform.SetParent(Map.transform, false); // This makes the object child of the map!
             var textPrefab = Resources.Load<GameObject>( "TextPrefab" );
             var text = Instantiate( textPrefab, new Vector3( 0, 0, -3 ), Quaternion.identity ) as GameObject;
             text.GetComponent<TextMesh>( ).text = loc.LocationName;
             text.transform.SetParent(backgroundTile.transform, false); // Text to be child of tile.
-            if ( LogicalDistance( loc.LogicalX, loc.LogicalY ) <= GALAXY_SIZE ) {
-                var planetTile = Instantiate( preFab, loc.TableXY(0), Quaternion.identity ) as GameObject;
+            var dist = LogicalDistance( loc.LogicalX, loc.LogicalY );
+            if ( dist <= GALAXY_SIZE ) {
+                backgroundTile.GetComponent<SpriteRenderer>( ).sprite =
+                    Resources.Load<Sprite>( "SetupTiles/Tile-Setup-" + setupTileNames[dist] );
+            }
+        }
+
+        // Make "palette" of tiles to the left-hand side, draggable
+        var x = 4;
+        foreach ( var tileset in new string[] { "1planet", "2planet", "Special" } ) {
+            x++;
+            this.tiles = Resources.LoadAll<Sprite>( "Tiles/" + tileset );
+            for ( int i = 0; i < tiles.Length; ++i ) {
+                var sprite = tiles[i];
+                var planetTile = Instantiate( preFab, new Vector3( -x * MapLocation.TILE_RADIUS * 2, (i-7) * MapLocation.TILE_HEIGHT, 0 ), Quaternion.identity ) as GameObject;
                 planetTile.GetComponent<SpriteRenderer>( ).sprite = sprite;
             }
         }
