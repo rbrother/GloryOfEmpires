@@ -2,11 +2,18 @@
 
 public class CameraPanning : MonoBehaviour {
 
+    private static bool _draggingPiece = false;
+
 	private float targetCameraSize;
 	private Vector3 lastPosition;
 
 	private const float MAX_CAMERA_SIZE = 30.0f;
 	private const float MIN_CAMERA_SIZE = 2.0f;
+
+    public static bool IsDraggingPiece {
+        get { return _draggingPiece; }
+        set { _draggingPiece = value; }
+    }
 
 	void Start () {
 		targetCameraSize = this.GetComponent<Camera>().orthographicSize;
@@ -22,10 +29,10 @@ public class CameraPanning : MonoBehaviour {
 		var deltaSize = (targetCameraSize - GetComponent<Camera>().orthographicSize);
 		GetComponent<Camera>().orthographicSize += deltaSize * Time.deltaTime * 5.0f;
 		// Panning with mouse button
-		if (Input.GetMouseButtonDown (1)) {
+		if (Input.GetMouseButtonDown (0) && !IsDraggingPiece) {
 			lastPosition = Input.mousePosition;
 		}
-		if (Input.GetMouseButton (1)) {
+		if (Input.GetMouseButton (0) && !IsDraggingPiece) {
 			var deltaPos = ( lastPosition - Input.mousePosition );
 			var deltaCamera = deltaPos * GetComponent<Camera>().orthographicSize * 2.0f / Screen.height;
 			transform.Translate( deltaCamera.x, deltaCamera.y, 0 );

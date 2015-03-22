@@ -5,7 +5,6 @@ using Net.Brotherus;
 public class TileScript : MonoBehaviour {
 
     private bool _selected = false;
-    private bool dragging = false;
     private Vector3 lastPosition;
     private Vector3 mouseDownPosition;
         
@@ -16,7 +15,7 @@ public class TileScript : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        if (dragging) {
+        if (CameraPanning.IsDraggingPiece && this.Selected) {
             var deltaPos = ( lastPosition - Input.mousePosition );
             var deltaCamera = deltaPos * Camera.main.orthographicSize * 2.0f / Screen.height;
             this.gameObject.transform.Translate( -deltaCamera.x, -deltaCamera.y, 0 );
@@ -36,7 +35,7 @@ public class TileScript : MonoBehaviour {
         mouseDownPosition = Input.mousePosition;
         lastPosition = mouseDownPosition;
         if (Selected) {
-            this.dragging = true;
+            CameraPanning.IsDraggingPiece = true;
         }
     }
 
@@ -45,12 +44,13 @@ public class TileScript : MonoBehaviour {
         if (MouseCloseToDownPos) {
             Debug.Log( "Selected" );
             this.Selected = !this.Selected;
-        } else if ( dragging ) {
+        } else if ( CameraPanning.IsDraggingPiece ) {
             this.Selected = false;
+            // TODO: Try to refactor away dependency of Map.CurrentMap
             var snappedLocation = Map.CurrentMap.NearestLocation( this.gameObject.transform.position );
             this.gameObject.transform.position = snappedLocation.TableXY( 0 );
         }
-        this.dragging = false;
+        CameraPanning.IsDraggingPiece = false;
     }
 
     public bool Selected {
