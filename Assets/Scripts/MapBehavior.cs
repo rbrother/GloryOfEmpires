@@ -18,7 +18,7 @@ public class MapBehavior : MonoBehaviour {
     void Start( ) {
         var map = new Map( width: 4, height: 4 ); // Sets singleton
         var backgroundPreFab = Resources.Load<GameObject>( "BackgroundPrefab" );
-        var preFab = Resources.Load<GameObject>( "TilePrefab" );
+        //var preFab = Resources.Load<GameObject>( "TilePrefab" );
 
         foreach ( var loc in map.Locations ) {
             var backgroundTile = Instantiate( backgroundPreFab, loc.TableXY( 1 ), Quaternion.identity ) as GameObject;
@@ -34,23 +34,43 @@ public class MapBehavior : MonoBehaviour {
             }
         }
 
-        // Make "palette" of tiles to the left-hand side, draggable
-        var x = 4;
-        foreach ( var tileset in new string[] { "1planet", "2planet", "Special" } ) {
-            x++;
-            this.tiles = Resources.LoadAll<Sprite>( "Tiles/" + tileset );
-            for ( int i = 0; i < tiles.Length; ++i ) {
-                var sprite = tiles[i];
-                var planetTile = Instantiate( preFab, new Vector3( -x * MapLocation.TILE_RADIUS * 2, (i-7) * MapLocation.TILE_HEIGHT, 0 ), Quaternion.identity ) as GameObject;
-                planetTile.GetComponent<SpriteRenderer>( ).sprite = sprite;
-            }
-        }
-
         PhotonNetwork.ConnectUsingSettings( "v0.1" );
     }
 
     void Update( ) {
     }
+
+    void OnJoinedLobby() {
+        Debug.Log("Photon OnJoinedLobby");
+        var options = new RoomOptions();
+        PhotonNetwork.JoinOrCreateRoom("Sandbox", options, TypedLobby.Default);
+    }
+
+    void OnCreatedRoom() {
+        Debug.Log("OnCreatedRoom");
+        // Make "palette" of tiles to the left-hand side, draggable.
+        // These are Photon multiplayer-objects
+        var x = 4;
+        foreach (var tileset in new string[] { "1planet", "2planet", "Special" })
+        {
+            x++;
+            this.tiles = Resources.LoadAll<Sprite>("Tiles/" + tileset);
+            for (int i = 0; i < tiles.Length; ++i)
+            {
+                var planetTile = PhotonNetwork.Instantiate("TilePrefab",
+                    new Vector3(-x * MapLocation.TILE_RADIUS * 2, (i - 7) * MapLocation.TILE_HEIGHT, 0),
+                    Quaternion.identity, group: 0) as GameObject;
+                // TODO: the sprites need to be set in all clients separately,
+                // move this to OnJoinedRoom()..?
+                planetTile.GetComponent<SpriteRenderer>().sprite = tiles[i];
+            }
+        }
+    }
+
+    void OnJoinedRoom()  {
+        Debug.Log("Joined Room: " + PhotonNetwork.room.ToStringFull());
+    }
+
 
     /// <summary>
     /// Returns number of steps needed to get from (0,0) to logicalX, logicalY
