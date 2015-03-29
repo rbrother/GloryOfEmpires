@@ -45,6 +45,8 @@ public class MapBehavior : MonoBehaviour {
                 planetTile.GetComponent<SpriteRenderer>( ).sprite = sprite;
             }
         }
+
+        PhotonNetwork.ConnectUsingSettings( "v0.1" );
     }
 
     void Update( ) {

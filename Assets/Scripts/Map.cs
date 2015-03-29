@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ExitGames.Client.Photon;
 
 namespace Net.Brotherus {
 
@@ -70,5 +71,7 @@ namespace Net.Brotherus {
         }
 
     } // struct
+
+
 
 } // namespace

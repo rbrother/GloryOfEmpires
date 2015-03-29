@@ -7,10 +7,12 @@ public class TileScript : MonoBehaviour {
     private bool _selected = false;
     private Vector3 lastPosition;
     private Vector3 mouseDownPosition;
+    private GameObject hexLinesPrefab;
+    private GameObject selectionHex;
         
 	// Use this for initialization
 	void Start () {
-	
+        hexLinesPrefab = Resources.Load<GameObject>( "HexLines" );
 	}
 	
 	// Update is called once per frame
@@ -58,7 +60,15 @@ public class TileScript : MonoBehaviour {
         set {
             if ( value != _selected ) { 
                 _selected = value;
-                GetComponent<SpriteRenderer>( ).color = _selected ? Color.red : Color.white;
+                if ( _selected ) {
+                    selectionHex = Instantiate<GameObject>( hexLinesPrefab );
+                    //selectionHex.transform.position = this.transform.position;
+                    selectionHex.transform.Translate( 0, 0, -1 );
+                    selectionHex.transform.SetParent( this.transform, false );
+                } else {
+                    Destroy( selectionHex );
+                }
+                GetComponent<SpriteRenderer>( ).color = _selected ? new Color(1, 1, 1, 0.75f) : Color.white;
                 this.gameObject.transform.Translate( 0, 0, _selected ? -1 : 1 ); // Move sepected to front
             }
         }
