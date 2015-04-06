@@ -11,7 +11,7 @@ public class TileScript : Photon.MonoBehaviour {
     private static GameObject _hexLinesPrefab = null;
     private GameObject selectionHex;
 
-    public string SpriteName = "";
+    public string _spriteName = "";
         
 	// Use this for initialization
 	void Start () {
@@ -25,8 +25,18 @@ public class TileScript : Photon.MonoBehaviour {
             return _hexLinesPrefab;
         }
     }
+
+    public string SpriteName {
+        get { return _spriteName;  }
+        set {
+            if (_spriteName != value) {
+                _spriteName = value;
+                GetComponent<SpriteRenderer>().sprite =
+                    Resources.Load<Sprite>("Tiles/" + _spriteName);
+            }
+        }
+    }
 	
-	// Update is called once per frame
 	void Update () {
         if (CameraPanning.IsDraggingPiece && this.Selected) {
             var deltaPos = ( lastPosition - Input.mousePosition );
@@ -75,6 +85,8 @@ public class TileScript : Photon.MonoBehaviour {
                     selectionHex = Instantiate<GameObject>( HexLinesPrefab );
                     selectionHex.transform.Translate( 0, 0, -1 );
                     selectionHex.transform.SetParent( this.transform, false );
+                    var photonView = GetComponent<PhotonView>();
+                    if (!photonView.isMine) photonView.RequestOwnership();
                 } else {
                     Destroy( selectionHex );
                 }
@@ -85,7 +97,11 @@ public class TileScript : Photon.MonoBehaviour {
     }
 
     public void OnPhotonSerializeView( PhotonStream stream, PhotonMessageInfo info ) {
-
+        if (stream.isWriting) {
+            stream.SendNext(SpriteName);
+        } else {
+            this.SpriteName = (string)stream.ReceiveNext();
+        }
     }
 
 }

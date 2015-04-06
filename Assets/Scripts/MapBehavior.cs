@@ -6,8 +6,6 @@ using Net.Brotherus;
 
 public class MapBehavior : MonoBehaviour {
 
-    private Sprite[] tiles;
-
     private GameObject Map { get { return this.gameObject; } }
 
     public const int GALAXY_SIZE = 4;
@@ -52,17 +50,13 @@ public class MapBehavior : MonoBehaviour {
         var x = 4;
         foreach (var tileset in new string[] { "1planet", "2planet", "Special" }) {
             x++;
-            this.tiles = Resources.LoadAll<Sprite>("Tiles/" + tileset);
+            var tiles = Resources.LoadAll<Sprite>("Tiles/" + tileset);
             for (int i = 0; i < tiles.Length; ++i)
             {
                 var planetTile = PhotonNetwork.Instantiate("TilePrefab",
                     new Vector3(-x * MapLocation.TILE_RADIUS * 2, (i - 7) * MapLocation.TILE_HEIGHT, 0),
                     Quaternion.identity, group: 0) as GameObject;
-                // TODO: the sprites need to be set in all clients separately,
-                // move this to OnJoinedRoom()..?
-                planetTile.GetComponent<SpriteRenderer>().sprite = tiles[i];
-                planetTile.GetComponent<TileScript>( ).SpriteName = tiles[i].name;
-                Debug.Log( tiles[i].name );
+                planetTile.GetComponent<TileScript>( ).SpriteName = tileset + "/" + tiles[i].name;
             }
         }
     }
