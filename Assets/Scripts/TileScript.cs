@@ -1,19 +1,30 @@
 ﻿using UnityEngine;
 using System.Collections;
 using Net.Brotherus;
+using Photon;
 
-public class TileScript : MonoBehaviour {
+public class TileScript : Photon.MonoBehaviour {
 
     private bool _selected = false;
     private Vector3 lastPosition;
     private Vector3 mouseDownPosition;
-    private GameObject hexLinesPrefab;
+    private static GameObject _hexLinesPrefab = null;
     private GameObject selectionHex;
+
+    public string SpriteName = "";
         
 	// Use this for initialization
 	void Start () {
-        hexLinesPrefab = Resources.Load<GameObject>( "HexLines" );
 	}
+
+    private static GameObject HexLinesPrefab {
+        get {
+            if ( _hexLinesPrefab == null ) {
+                _hexLinesPrefab = Resources.Load<GameObject>( "HexLines" );
+            }
+            return _hexLinesPrefab;
+        }
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -61,8 +72,7 @@ public class TileScript : MonoBehaviour {
             if ( value != _selected ) { 
                 _selected = value;
                 if ( _selected ) {
-                    selectionHex = Instantiate<GameObject>( hexLinesPrefab );
-                    //selectionHex.transform.position = this.transform.position;
+                    selectionHex = Instantiate<GameObject>( HexLinesPrefab );
                     selectionHex.transform.Translate( 0, 0, -1 );
                     selectionHex.transform.SetParent( this.transform, false );
                 } else {
@@ -72,6 +82,10 @@ public class TileScript : MonoBehaviour {
                 this.gameObject.transform.Translate( 0, 0, _selected ? -1 : 1 ); // Move sepected to front
             }
         }
+    }
+
+    public void OnPhotonSerializeView( PhotonStream stream, PhotonMessageInfo info ) {
+
     }
 
 }

@@ -18,7 +18,6 @@ public class MapBehavior : MonoBehaviour {
     void Start( ) {
         var map = new Map( width: 4, height: 4 ); // Sets singleton
         var backgroundPreFab = Resources.Load<GameObject>( "BackgroundPrefab" );
-        //var preFab = Resources.Load<GameObject>( "TilePrefab" );
 
         foreach ( var loc in map.Locations ) {
             var backgroundTile = Instantiate( backgroundPreFab, loc.TableXY( 1 ), Quaternion.identity ) as GameObject;
@@ -51,8 +50,7 @@ public class MapBehavior : MonoBehaviour {
         // Make "palette" of tiles to the left-hand side, draggable.
         // These are Photon multiplayer-objects
         var x = 4;
-        foreach (var tileset in new string[] { "1planet", "2planet", "Special" })
-        {
+        foreach (var tileset in new string[] { "1planet", "2planet", "Special" }) {
             x++;
             this.tiles = Resources.LoadAll<Sprite>("Tiles/" + tileset);
             for (int i = 0; i < tiles.Length; ++i)
@@ -63,6 +61,8 @@ public class MapBehavior : MonoBehaviour {
                 // TODO: the sprites need to be set in all clients separately,
                 // move this to OnJoinedRoom()..?
                 planetTile.GetComponent<SpriteRenderer>().sprite = tiles[i];
+                planetTile.GetComponent<TileScript>( ).SpriteName = tiles[i].name;
+                Debug.Log( tiles[i].name );
             }
         }
     }
