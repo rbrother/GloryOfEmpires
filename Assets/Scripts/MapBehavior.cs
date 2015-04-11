@@ -91,7 +91,7 @@ public class MapBehavior : MonoBehaviour {
             foreach ( var unit in plasticsPieces ) {
                 for ( int n = 1; n <= unit.Count; n++ ) {
                     var ship = PhotonNetwork.Instantiate( "ShipPrefab",
-                        new Vector3( x, y, -1 ),
+                        new Vector3( x, y, -3 ),
                         Quaternion.identity, group: 0 ) as GameObject;
                     ship.GetComponent<SyncSprite>( ).SpriteName = 
                         string.Format("Ships/{0}/Unit-{0}-{1}", color, unit.Name);
