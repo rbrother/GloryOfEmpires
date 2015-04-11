@@ -14,7 +14,7 @@ public class MapBehavior : MonoBehaviour {
         "LightBlue", "MediumBlue", "DarkBlue" };
 
     void Start( ) {
-        var map = new Map( width: 4, height: 4 ); // Sets singleton
+        var map = new Map( width: 5, height: 4 ); // Sets singleton
         var backgroundPreFab = Resources.Load<GameObject>( "BackgroundPrefab" );
 
         foreach ( var loc in map.Locations ) {
@@ -45,19 +45,65 @@ public class MapBehavior : MonoBehaviour {
 
     void OnCreatedRoom() {
         Debug.Log("OnCreatedRoom");
+        CreateTilePalette( );
+        CreateShipPalette( );
+    }
+
+    private static void CreateTilePalette( ) {
         // Make "palette" of tiles to the left-hand side, draggable.
         // These are Photon multiplayer-objects
-        var x = 4;
-        foreach (var tileset in new string[] { "1planet", "2planet", "Special" }) {
-            x++;
-            var tiles = Resources.LoadAll<Sprite>("Tiles/" + tileset);
-            for (int i = 0; i < tiles.Length; ++i)
-            {
-                var planetTile = PhotonNetwork.Instantiate("TilePrefab",
-                    new Vector3(-x * MapLocation.TILE_RADIUS * 2, (i - 7) * MapLocation.TILE_HEIGHT, 0),
-                    Quaternion.identity, group: 0) as GameObject;
-                planetTile.GetComponent<TileScript>( ).SpriteName = tileset + "/" + tiles[i].name;
+        var allTiles = new[] { "1planet", "2planet", "Special" }.
+            SelectMany( set => Resources.LoadAll<Sprite>( "Tiles/" + set ).
+                Select( sprite => new { Set = set, Sprite = sprite } ) );
+        var x = -MapLocation.TILE_RADIUS * 10.0f;
+        var startY = -MapLocation.TILE_RADIUS * 8.0f;
+        var y = startY;
+        foreach ( var tile in allTiles ) {
+            var planetTile = PhotonNetwork.Instantiate( "TilePrefab",
+                new Vector3( x, y, 0 ), Quaternion.identity, group: 0 ) as GameObject;
+            planetTile.GetComponent<SyncSprite>( ).SpriteName = "Tiles/" + tile.Set + "/" + tile.Sprite.name;
+            y += MapLocation.TILE_RADIUS * 2;
+            if ( y > MapLocation.TILE_RADIUS * 8.0f ) {
+                y = startY;
+                x -= MapLocation.TILE_RADIUS * 2;
             }
+        }
+    }
+
+    private static void CreateShipPalette( ) {
+        var shipColors = new[] { "Green", "Iron", "Orange", "Pink", "Red", "SkyBlue" };
+        var plasticsPieces = new[] { 
+            new { Name = "GF", Count = 12 },
+            new { Name = "MU", Count = 4 },
+            new { Name = "Fighter", Count = 10 },
+            new { Name = "Destroyer", Count = 8 },
+            new { Name = "Cruiser", Count = 8 },
+            new { Name = "Carrier", Count = 4 },
+            new { Name = "Dreadnaught", Count = 5 },
+            new { Name = "Warsun", Count = 2 },
+            new { Name = "Flagship", Count = 1 },
+            new { Name = "SpaceDock", Count = 3 }
+        };
+        var startX = MapLocation.TILE_RADIUS * 9.0f;
+        var y = -10.0f;
+        foreach ( var color in shipColors ) {
+            var x = startX;
+            foreach ( var unit in plasticsPieces ) {
+                for ( int n = 1; n <= unit.Count; n++ ) {
+                    var ship = PhotonNetwork.Instantiate( "ShipPrefab",
+                        new Vector3( x, y, -1 ),
+                        Quaternion.identity, group: 0 ) as GameObject;
+                    ship.GetComponent<SyncSprite>( ).SpriteName = 
+                        string.Format("Ships/{0}/Unit-{0}-{1}", color, unit.Name);
+                    x += 0.3f;
+                }
+                x += 1.0f;
+                if ( unit.Name == "Destroyer" ) {
+                    x = startX;
+                    y += 1.5f;
+                }
+            }
+            y += 2.5f;
         }
     }
 

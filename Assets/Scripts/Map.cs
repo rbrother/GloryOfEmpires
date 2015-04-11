@@ -1,5 +1,4 @@
-﻿using Vector3 = UnityEngine.Vector3;
-using Mathf = UnityEngine.Mathf;
+﻿using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,11 +66,10 @@ namespace Net.Brotherus {
         }
 
         public MapLocation NearestLocation( Vector3 pos ) {
+            Debug.Log( "Finding nearest to: " + pos.ToString( ) + "   locs: " + locations.Length.ToString());
             return this.locations.MinBy( loc => Vector3.Distance( loc.TableXY( pos.z ), pos ) );
         }
 
     } // struct
-
-
 
 } // namespace

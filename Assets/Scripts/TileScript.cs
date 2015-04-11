@@ -10,8 +10,6 @@ public class TileScript : Photon.MonoBehaviour {
     private Vector3 mouseDownPosition;
     private static GameObject _hexLinesPrefab = null;
     private GameObject selectionHex;
-
-    public string _spriteName = "";
         
 	// Use this for initialization
 	void Start () {
@@ -23,17 +21,6 @@ public class TileScript : Photon.MonoBehaviour {
                 _hexLinesPrefab = Resources.Load<GameObject>( "HexLines" );
             }
             return _hexLinesPrefab;
-        }
-    }
-
-    public string SpriteName {
-        get { return _spriteName;  }
-        set {
-            if (_spriteName != value) {
-                _spriteName = value;
-                GetComponent<SpriteRenderer>().sprite =
-                    Resources.Load<Sprite>("Tiles/" + _spriteName);
-            }
         }
     }
 	
@@ -70,7 +57,7 @@ public class TileScript : Photon.MonoBehaviour {
         } else if ( CameraPanning.IsDraggingPiece ) {
             this.Selected = false;
             // TODO: Try to refactor away dependency of Map.CurrentMap
-            var snappedLocation = Map.CurrentMap.NearestLocation( this.gameObject.transform.position );
+            var snappedLocation = Map.CurrentMap.NearestLocation( this.transform.position );
             this.gameObject.transform.position = snappedLocation.TableXY( 0 );
         }
         CameraPanning.IsDraggingPiece = false;
@@ -93,14 +80,6 @@ public class TileScript : Photon.MonoBehaviour {
                 GetComponent<SpriteRenderer>( ).color = _selected ? new Color(1, 1, 1, 0.75f) : Color.white;
                 this.gameObject.transform.Translate( 0, 0, _selected ? -1 : 1 ); // Move sepected to front
             }
-        }
-    }
-
-    public void OnPhotonSerializeView( PhotonStream stream, PhotonMessageInfo info ) {
-        if (stream.isWriting) {
-            stream.SendNext(SpriteName);
-        } else {
-            this.SpriteName = (string)stream.ReceiveNext();
         }
     }
 
