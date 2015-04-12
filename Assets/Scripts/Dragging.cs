@@ -20,7 +20,7 @@ public class Dragging : Photon.MonoBehaviour {
     }
 	
 	void Update () {
-        if ( CameraPanning.IsDraggingPiece && this.Selected ) {
+        if ( !CameraPanning.EnablePanning && this.Selected ) {
             var deltaPos = ( lastPosition - Input.mousePosition );
             var deltaCamera = deltaPos * Camera.main.orthographicSize * 2.0f / Screen.height;
             this.gameObject.transform.Translate( -deltaCamera.x, -deltaCamera.y, 0 );
@@ -32,9 +32,7 @@ public class Dragging : Photon.MonoBehaviour {
         Debug.Log( "OnMouseDown" );
         mouseDownPosition = Input.mousePosition;
         lastPosition = mouseDownPosition;
-        if ( Selected ) {
-            CameraPanning.IsDraggingPiece = true;
-        }
+        if ( Selected ) CameraPanning.EnablePanning = false;
     }
 
     public void OnMouseUp( ) {
@@ -42,13 +40,14 @@ public class Dragging : Photon.MonoBehaviour {
         if ( MouseCloseToDownPos ) {
             Debug.Log( "Selected" );
             this.Selected = !this.Selected;
-        } else if ( CameraPanning.IsDraggingPiece ) {
+        } else if ( !CameraPanning.EnablePanning ) {
             this.Selected = false;
             // TODO: Try to refactor away dependency of Map.CurrentMap
             var snappedLocation = Map.CurrentMap.NearestLocation( this.transform.position );
             this.transform.position = snappedLocation.TableXY( _originalZ );
+            Debug.Log( "returned to z: " + this.transform.position.z.ToString( ) );
         }
-        CameraPanning.IsDraggingPiece = false;
+        CameraPanning.EnablePanning = true;
     }
 
     public bool Selected {
@@ -59,7 +58,10 @@ public class Dragging : Photon.MonoBehaviour {
                 var photonView = GetComponent<PhotonView>( );
                 if ( !photonView.isMine ) photonView.RequestOwnership( );
                 GetComponent<SpriteRenderer>( ).color = _selected ? new Color( 1, 1, 1, 0.75f ) : Color.white;
-                _originalZ = this.transform.position.z;
+                if ( _selected ) {
+                    _originalZ = this.transform.position.z;
+                    Debug.Log( "original z: " + _originalZ.ToString( ) );
+                }
                 this.transform.Translate( 0, 0, _selected ? -1 : 1 ); // Move selected to front
             }
         }

@@ -6,6 +6,14 @@ using Net.Brotherus;
 
 public class MapBehavior : MonoBehaviour {
 
+    /*
+     *  Map component z-levels ( + = further from camera, - = closer to camera )
+     *  Background tiles:    +1
+     *  Tiles in palette:     0
+     *  Ships:               -3
+     *  Hex ID text:         -4
+     */
+
     private GameObject Map { get { return this.gameObject; } }
 
     public const int GALAXY_SIZE = 4;
@@ -21,7 +29,7 @@ public class MapBehavior : MonoBehaviour {
             var backgroundTile = Instantiate( backgroundPreFab, loc.TableXY( 1 ), Quaternion.identity ) as GameObject;
             backgroundTile.transform.SetParent(Map.transform, false); // This makes the object child of the map!
             var textPrefab = Resources.Load<GameObject>( "TextPrefab" );
-            var text = Instantiate( textPrefab, new Vector3( 0, 0, -3 ), Quaternion.identity ) as GameObject;
+            var text = Instantiate( textPrefab, new Vector3( 0, 0, -4 ), Quaternion.identity ) as GameObject;
             text.GetComponent<TextMesh>( ).text = loc.LocationName;
             text.transform.SetParent(backgroundTile.transform, false); // Text to be child of tile.
             var dist = LogicalDistance( loc.LogicalX, loc.LogicalY );
@@ -61,6 +69,7 @@ public class MapBehavior : MonoBehaviour {
         foreach ( var tile in allTiles ) {
             var planetTile = PhotonNetwork.Instantiate( "TilePrefab",
                 new Vector3( x, y, 0 ), Quaternion.identity, group: 0 ) as GameObject;
+            planetTile.name = tile.Sprite.name;
             planetTile.GetComponent<SyncSprite>( ).SpriteName = "Tiles/" + tile.Set + "/" + tile.Sprite.name;
             y += MapLocation.TILE_RADIUS * 2;
             if ( y > MapLocation.TILE_RADIUS * 8.0f ) {

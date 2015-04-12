@@ -4,7 +4,7 @@ using System.Collections;
 public class TileScript : MonoBehaviour {
 
     private static GameObject _hexLinesPrefab = null;
-    private GameObject selectionHex;
+    private GameObject selectionHex = null;
         
 	void Start () {
 	}
@@ -18,16 +18,15 @@ public class TileScript : MonoBehaviour {
         }
     }
 
-    /*
-                    selectionHex = Instantiate<GameObject>( HexLinesPrefab );
-                    selectionHex.transform.Translate( 0, 0, -1 );
-                    selectionHex.transform.SetParent( this.transform, false );
-     * 
-     *                     Destroy( selectionHex );
-
-    */
-
-    void Update () {
+    void Update( ) {
+        if ( GetComponent<Dragging>( ).Selected && selectionHex == null ) {
+            selectionHex = Instantiate<GameObject>( HexLinesPrefab );
+            selectionHex.transform.Translate( 0, 0, -1 );
+            selectionHex.transform.SetParent( this.transform, false );
+        } else if ( !GetComponent<Dragging>( ).Selected && selectionHex != null ) {
+            Destroy( selectionHex );
+            selectionHex = null;
+        }
     }
 
 }
