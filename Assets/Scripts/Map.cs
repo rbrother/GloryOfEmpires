@@ -18,8 +18,8 @@ namespace Net.Brotherus {
         public float TableX { get { return LogicalToTableX( LogicalX, LogicalY ); } }
         public float TableY { get { return LogicalToTableY( LogicalX, LogicalY ); } }
 
-        private static float LogicalToTableX( int logicalX, int logicalY ) { return logicalX * TILE_RADIUS * 1.5f; }
-        private static float LogicalToTableY( int logicalX, int logicalY ) { return ( logicalX * 0.5f + logicalY ) * TILE_HEIGHT; }
+        public static float LogicalToTableX( int logicalX, int logicalY ) { return logicalX * TILE_RADIUS * 1.5f; }
+        public static float LogicalToTableY( int logicalX, int logicalY ) { return ( logicalX * 0.5f + logicalY ) * TILE_HEIGHT; }
 
         public static bool IsOnTable( int logicalX, int logicalY, int tableWidth, int tableHeight ) {
             float mapX = LogicalToTableX( logicalX, logicalY );
@@ -47,12 +47,15 @@ namespace Net.Brotherus {
     public struct Map {
         private static Map currentMap;
         private MapLocation[] locations;
+        private int width, height;
 
         public static Map CurrentMap { get { return currentMap; } }
 
         public MapLocation[] Locations { get { return this.locations; } }
 
         public Map( int width, int height ) {
+            this.width = width;
+            this.height = height;
             var areaSize = width + height;
             var rawLocations =
                 Enumerable.Range( -areaSize, areaSize * 2 ).SelectMany(
@@ -65,9 +68,21 @@ namespace Net.Brotherus {
             currentMap = this;
         }
 
-        public MapLocation NearestLocation( Vector3 pos ) {
+        /// <summary>
+        /// Nearest map location to given point
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <param name="snapSteps">Subdivide the grid to finer steps with 2,3,4,...</param>
+        /// <returns></returns>
+        public Vector3 NearestLocation( Vector3 pos, int snapSteps = 1 ) {
             Debug.Log( "Finding nearest to: " + pos.ToString( ) + "   locs: " + locations.Length.ToString());
-            return this.locations.MinBy( loc => Vector3.Distance( loc.TableXY( pos.z ), pos ) );
+            var areaSize = (this.width + this.height) * snapSteps;
+            var snapPositions = Enumerable.Range( -areaSize, areaSize * 2 ).SelectMany(
+                x => Enumerable.Range( -areaSize, areaSize * 2 ).Select(
+                    y => new Vector3(
+                        MapLocation.LogicalToTableX( x, y ) / snapSteps,
+                        MapLocation.LogicalToTableY( x, y ) / snapSteps ) ) );
+            return snapPositions.MinBy( loc => Vector3.Distance( loc, pos ) );
         }
 
     } // struct

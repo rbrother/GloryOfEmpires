@@ -9,6 +9,12 @@ public class Dragging : Photon.MonoBehaviour {
     private Vector3 mouseDownPosition;
     private float _originalZ;
 
+    public int SnapSteps { get; set; }
+
+    public Dragging( ) {
+        SnapSteps = 1;
+    }
+
 	void Start () {	
 	}
 
@@ -43,8 +49,8 @@ public class Dragging : Photon.MonoBehaviour {
         } else if ( !CameraPanning.EnablePanning ) {
             this.Selected = false;
             // TODO: Try to refactor away dependency of Map.CurrentMap
-            var snappedLocation = Map.CurrentMap.NearestLocation( this.transform.position );
-            this.transform.position = snappedLocation.TableXY( _originalZ );
+            var snappedLocation = Map.CurrentMap.NearestLocation( this.transform.position, SnapSteps );
+            this.transform.position = new Vector3( snappedLocation.x, snappedLocation.y, _originalZ );
             Debug.Log( "returned to z: " + this.transform.position.z.ToString( ) );
         }
         CameraPanning.EnablePanning = true;

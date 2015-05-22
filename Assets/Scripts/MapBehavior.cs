@@ -11,7 +11,7 @@ public class MapBehavior : MonoBehaviour {
      *  Background tiles:    +1
      *  Tiles in palette:     0
      *  Ships:               -3
-     *  Hex ID text:         -4
+     *  Hex ID text:         -5
      */
 
     private GameObject Map { get { return this.gameObject; } }
@@ -29,7 +29,7 @@ public class MapBehavior : MonoBehaviour {
             var backgroundTile = Instantiate( backgroundPreFab, loc.TableXY( 1 ), Quaternion.identity ) as GameObject;
             backgroundTile.transform.SetParent(Map.transform, false); // This makes the object child of the map!
             var textPrefab = Resources.Load<GameObject>( "TextPrefab" );
-            var text = Instantiate( textPrefab, new Vector3( 0, 0, -4 ), Quaternion.identity ) as GameObject;
+            var text = Instantiate( textPrefab, new Vector3( 0, 0, -5 ), Quaternion.identity ) as GameObject;
             text.GetComponent<TextMesh>( ).text = loc.LocationName;
             text.transform.SetParent(backgroundTile.transform, false); // Text to be child of tile.
             var dist = LogicalDistance( loc.LogicalX, loc.LogicalY );
@@ -104,6 +104,7 @@ public class MapBehavior : MonoBehaviour {
                         Quaternion.identity, group: 0 ) as GameObject;
                     ship.GetComponent<SyncSprite>( ).SpriteName = 
                         string.Format("Ships/{0}/Unit-{0}-{1}", color, unit.Name);
+                    ship.GetComponent<Dragging>( ).SnapSteps = 3;
                     x += 0.3f;
                 }
                 x += 1.0f;
