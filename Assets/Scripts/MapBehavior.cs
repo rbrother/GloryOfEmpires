@@ -22,6 +22,7 @@ public class MapBehavior : MonoBehaviour {
         "LightBlue", "MediumBlue", "DarkBlue" };
 
     void Start( ) {
+        Debug.Log( "MapBehavior.Start: creating background" );
         var map = new Map( width: 5, height: 4 ); // Sets singleton
         var backgroundPreFab = Resources.Load<GameObject>( "BackgroundPrefab" );
 
@@ -102,6 +103,7 @@ public class MapBehavior : MonoBehaviour {
                     var ship = PhotonNetwork.Instantiate( "ShipPrefab",
                         new Vector3( x, y, -3 ),
                         Quaternion.identity, group: 0 ) as GameObject;
+                    ship.name = string.Format( "{0}-{1}-{2}", unit.Name, color, n);
                     ship.GetComponent<SyncSprite>( ).SpriteName = 
                         string.Format("Ships/{0}/Unit-{0}-{1}", color, unit.Name);
                     ship.GetComponent<Dragging>( ).SnapSteps = 3;
@@ -120,7 +122,6 @@ public class MapBehavior : MonoBehaviour {
     void OnJoinedRoom()  {
         Debug.Log("Joined Room: " + PhotonNetwork.room.ToStringFull());
     }
-
 
     /// <summary>
     /// Returns number of steps needed to get from (0,0) to logicalX, logicalY
