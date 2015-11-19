@@ -103,89 +103,72 @@
 (defn add-pos [ { x1 :x y1 :y } { x2 :x y2 :y } ] { :x (+ x1 x2) :y (+ y1 y2) } )
 (defn sub-pos [ { x1 :x y1 :y } { x2 :x y2 :y } ] { :x (- x1 x2) :y (- y1 y2) } )
 
+(defn min-pos
+  { :test (fn [] (is (= { :x 7 :y -4 } (min-pos [ { :x 7 :y 12} { :x 8 :y -4 } ] )))) }
+  [ coords ] { :x (apply min (map :x coords)) :y (apply min (map :y coords)) } )
+
 ; -------------------------- map ---------------------------------
 
 (def tile-height 376)
 (def tile-width 432)
 
-(defn- add-screen-coord [ { { x :x y :y } :logical-pos :as piece } ]
-  (merge piece
-         { :screen-pos
-          { :x (* x tile-width 0.75)
-            :y (* tile-height (+ (* x 0.5) y)) }} ))
+(defn- screen-pos
+  { :test (fn [] (is (= { :x 0.0 :y 0.0 } (screen-pos { :x 0 :y 0 } )))) }
+  [ { logical-x :x logical-y :y } ]
+    { :x (* logical-x tile-width 0.75)
+      :y (* tile-height (+ (* logical-x 0.5) logical-y)) } )
+
+(defn- add-screen-coord [ { pos :logical-pos :as piece } ]
+  (assoc piece :screen-pos (screen-pos pos) ))
 
 (defn- tile-on-table? [ piece map-size ]
   (let [ { { x :x y :y } :screen-pos } (add-screen-coord piece)
          distance (Math/sqrt (+ (* x x) (* y y))) ]
     (< distance (* tile-height map-size 1.01 ))))
 
-(defn range2d [ range1 range2 ]
-  (let [ combine (fn [value1] (map #(vector value1 %) range2)) ]
-    (mapcat combine range1)))
-
-(defn random-system [ x y ]
+(defn- random-system [ x y ]
   { :logical-pos { :x x :y y } :system (rand-nth all-systems) } )
 
-(defn make-random-map [ rings ]
-  (let [ x-range (range (- rings) (inc rings))
-         y-range (range (- rings) (inc rings))
-         coords (range2d x-range y-range) ]
-    (->> coords
-        (map (fn [ [x y] ] (random-system x y) ))
-        (filter #(tile-on-table? % rings)) )))
+(defn make-random-map
+  { :test (fn [] (is (=
+    (->> (make-random-map 1) (map #(assoc-in % [:system :image] "xxx")))
+    [ { :logical-pos { :x -1 :y 0 } :system { :image "xxx" } }
+      { :logical-pos { :x -1 :y 1 } :system { :image "xxx" } }
+      { :logical-pos { :x 0 :y -1 } :system { :image "xxx" } }
+      { :logical-pos { :x 0 :y 0 } :system { :image "xxx" } }
+      { :logical-pos { :x 0 :y 1 } :system { :image "xxx" } }
+      { :logical-pos { :x 1 :y -1 } :system { :image "xxx" } }
+      { :logical-pos { :x 1 :y 0 } :system { :image "xxx" } } ] ))) }
+  [ rings ]
+    (let [ a-range (range (- rings) (inc rings)) ]
+      (->> (range2d a-range a-range)
+          (map (fn [ [x y] ] (random-system x y) ))
+          (filter #(tile-on-table? % rings)) )))
 
 
 ;------------------ to svg ------------------------
-
-(defn- coords-to-screen-raw [ map-pieces ]
-  (map add-screen-coord map-pieces) )
-
-(defn- min-coords [ map-pieces ]
-  (let [ screen-positions (map :screen-pos map-pieces) ]
-  { :x (apply min (map :x screen-positions)) :y (apply min (map :y screen-positions)) } ))
-
-(defn coords-to-screen [ map-pieces ] (coords-to-screen-raw map-pieces))
 
 (defn- piece-to-svg [ { { x :x y :y } :screen-pos system :system :as tile } ]
   [ :image { :x (int x) :y (int y) :width tile-width :height tile-height
              "xlink:href" (str resources-url "Tiles/" (system :image)) } ] )
 
 (defn map-to-svg [ map-pieces ]
-  (let [ pieces2 (coords-to-screen map-pieces)
-         { min-x :x min-y :y } (min-coords pieces2)
+  (let [ pieces2 (map add-screen-coord map-pieces)
+         { min-x :x min-y :y } (min-pos (map :screen-pos pieces2))
          counter-translate (str (- min-x) "," (- min-y)) ]
     [ :html {}
-      [ :body {}
+      [ :body { :style "background: #202020;" }
         [ :svg { :width 1500, :height 1000, "xmlns:xlink" "http://www.w3.org/1999/xlink" }
           (concat [ :g { :transform (str "scale(0.25) translate(" counter-translate ")") } ]
                   (map piece-to-svg pieces2)) ] ] ] ))
 
 ;-----------------------------------------------------------------------
 
-(def a-map (make-random-map 2 ))
+(println (xml-to-text (map-to-svg (make-random-map 2))))
 
-(println (pretty-pr a-map))
+(spit "map.html" (xml-to-text (map-to-svg (make-random-map 4))))
 
-(println "coords-to-screen-raw")
-(println (coords-to-screen-raw a-map))
-
-(println "min-coords")
-(println (min-coords (coords-to-screen-raw a-map)))
-
-(println "coords-to-screen")
-(println (coords-to-screen a-map))
-
-(println "xml-to-text")
-(println (xml-to-text (map-to-svg a-map)))
-
-(spit "map.html" (xml-to-text (map-to-svg (make-random-map 2 ))))
-
-(deftest map-test
-  (are [ expected calculated ] (= expected calculated)
-     { :x 0.0 :y 0.0 } (add-screen-coord { :x 0 :y 0 } )
-     9 (count (range2d (range 3) (range 3)))))
-
-(clojure.main/repl)
+;(clojure.main/repl)
 
 (run-tests)
 
