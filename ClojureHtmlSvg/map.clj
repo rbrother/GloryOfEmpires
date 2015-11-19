@@ -1,7 +1,7 @@
 (ns GloryOfEmpires
   (:require [clojure.string :as str])
-  (:use Utils)
-  (:use Xml)
+  (:use utils)
+  (:use xml)
   (:use clojure.test))
 
 (def resources-url "http://www.brotherus.net/ti3/")
