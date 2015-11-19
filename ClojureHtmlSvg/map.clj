@@ -99,13 +99,11 @@
 
 ; ---- coordinate tools
 
-; TODO: overload + and - for them
-(defn add-pos [ { x1 :x y1 :y } { x2 :x y2 :y } ] { :x (+ x1 x2) :y (+ y1 y2) } )
-(defn sub-pos [ { x1 :x y1 :y } { x2 :x y2 :y } ] { :x (- x1 x2) :y (- y1 y2) } )
-
 (defn min-pos
   { :test (fn [] (is (= { :x 7 :y -4 } (min-pos [ { :x 7 :y 12} { :x 8 :y -4 } ] )))) }
   [ coords ] { :x (apply min (map :x coords)) :y (apply min (map :y coords)) } )
+
+(defn distance [dx dy] (Math/sqrt (+ (* dx dx) (* dy dy))))
 
 ; -------------------------- map ---------------------------------
 
@@ -122,9 +120,8 @@
   (assoc piece :screen-pos (screen-pos pos) ))
 
 (defn- tile-on-table? [ piece map-size ]
-  (let [ { { x :x y :y } :screen-pos } (add-screen-coord piece)
-         distance (Math/sqrt (+ (* x x) (* y y))) ]
-    (< distance (* tile-height map-size 1.01 ))))
+  (let [ { { x :x y :y } :screen-pos } (add-screen-coord piece) ]
+    (< (distance x y) (* tile-height map-size 1.01 ))))
 
 (defn- random-system [ x y ]
   { :logical-pos { :x x :y y } :system (rand-nth all-systems) } )
