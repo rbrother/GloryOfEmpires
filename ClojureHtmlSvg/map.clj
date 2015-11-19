@@ -1,6 +1,7 @@
 (ns GloryOfEmpires
   (:require [clojure.string :as str])
   (:use Utils)
+  (:use Xml)
   (:use clojure.test))
 
 (def resources-url "http://www.brotherus.net/ti3/")
@@ -95,17 +96,26 @@
     { :image "1planet/Tile-Wellon.gif" }
     { :image "1planet/Tile-Wepwawet.gif" } ] )
 
+
+; ---- coordinate tools
+
+; TODO: overload + and - for them
+(defn add-pos [ { x1 :x y1 :y } { x2 :x y2 :y } ] { :x (+ x1 x2) :y (+ y1 y2) } )
+(defn sub-pos [ { x1 :x y1 :y } { x2 :x y2 :y } ] { :x (- x1 x2) :y (- y1 y2) } )
+
+; -------------------------- map ---------------------------------
+
 (def tile-height 376)
 (def tile-width 432)
 
-(defn- coord-logical-to-screen [ { { x :x y :y } :logical-pos :as piece } ]
+(defn- add-screen-coord [ { { x :x y :y } :logical-pos :as piece } ]
   (merge piece
          { :screen-pos
           { :x (* x tile-width 0.75)
             :y (* tile-height (+ (* x 0.5) y)) }} ))
 
 (defn- tile-on-table? [ piece map-size ]
-  (let [ { { x :x y :y } :screen-pos } (coord-logical-to-screen piece)
+  (let [ { { x :x y :y } :screen-pos } (add-screen-coord piece)
          distance (Math/sqrt (+ (* x x) (* y y))) ]
     (< distance (* tile-height map-size 1.01 ))))
 
@@ -128,60 +138,27 @@
 ;------------------ to svg ------------------------
 
 (defn- coords-to-screen-raw [ map-pieces ]
-  (map coord-logical-to-screen map-pieces) )
+  (map add-screen-coord map-pieces) )
 
 (defn- min-coords [ map-pieces ]
   (let [ screen-positions (map :screen-pos map-pieces) ]
   { :x (apply min (map :x screen-positions)) :y (apply min (map :y screen-positions)) } ))
 
-; TODO: overload + and - for them
-(defn add-pos [ { x1 :x y1 :y } { x2 :x y2 :y } ] { :x (+ x1 x2) :y (+ y1 y2) } )
-(defn sub-pos [ { x1 :x y1 :y } { x2 :x y2 :y } ] { :x (- x1 x2) :y (- y1 y2) } )
-
-(defn- normalize-screen-coords [ pieces ]
-  (let [ min-pos (min-coords pieces)
-         normalize-piece (fn [ { pos :screen-pos :as piece } ]
-           (merge piece { :screen-pos (sub-pos pos min-pos) } )) ]
-    (map normalize-piece pieces)))
-
-(defn coords-to-screen [ map-pieces ]
-  (normalize-screen-coords (coords-to-screen-raw map-pieces)))
+(defn coords-to-screen [ map-pieces ] (coords-to-screen-raw map-pieces))
 
 (defn- piece-to-svg [ { { x :x y :y } :screen-pos system :system :as tile } ]
   [ :image { :x (int x) :y (int y) :width tile-width :height tile-height
              "xlink:href" (str resources-url "Tiles/" (system :image)) } ] )
 
 (defn map-to-svg [ map-pieces ]
-  [ :svg { :width 1500, :height 1000, "xmlns:xlink" "http://www.w3.org/1999/xlink" }
-    (concat [ :g { :transform "scale(0.25)" } ]
-      (map piece-to-svg (coords-to-screen map-pieces))) ] )
-
-;----------------- to xml string -------------------------
-
-(defn- key-to-str [ key ]
-  (cond
-    (string? key) key
-    (keyword? key) (name key)
-    :else (pr-str key)))
-
-(defn- attr-to-str [ [ key value ] ]
-  (str (key-to-str key) "=\"" value "\"" ))
-
-(defn- attrs-to-str [ attrs ]
-  (if (empty? attrs) ""
-    (str " " (str/join " " (map attr-to-str attrs)))))
-
-(def xml-to-text)
-
-(defn- content-to-str [ content ind ]
-  (str/join "" (map #(xml-to-text % ind) content)))
-
-(defn xml-to-text
-  ( [ element ] (xml-to-text element 0) )
-  ( [ [ tag attrs & content ] indent ]
-    (str (indent-str indent) "<" (name tag) (attrs-to-str attrs)
-         (if (empty? content) "/>"
-           (str ">" (content-to-str content (inc indent)) (indent-str indent) "</" (name tag) ">" )))))
+  (let [ pieces2 (coords-to-screen map-pieces)
+         { min-x :x min-y :y } (min-coords pieces2)
+         counter-translate (str (- min-x) "," (- min-y)) ]
+    [ :html {}
+      [ :body {}
+        [ :svg { :width 1500, :height 1000, "xmlns:xlink" "http://www.w3.org/1999/xlink" }
+          (concat [ :g { :transform (str "scale(0.25) translate(" counter-translate ")") } ]
+                  (map piece-to-svg pieces2)) ] ] ] ))
 
 ;-----------------------------------------------------------------------
 
@@ -201,11 +178,11 @@
 (println "xml-to-text")
 (println (xml-to-text (map-to-svg a-map)))
 
-;(spit "map.svg" (xml-to-text (map-to-svg (make-random-map 1 1 ))))
+(spit "map.html" (xml-to-text (map-to-svg (make-random-map 2 ))))
 
 (deftest map-test
   (are [ expected calculated ] (= expected calculated)
-     { :x 0.0 :y 0.0 } (coord-logical-to-screen { :x 0 :y 0 } )
+     { :x 0.0 :y 0.0 } (add-screen-coord { :x 0 :y 0 } )
      9 (count (range2d (range 3) (range 3)))))
 
 (clojure.main/repl)
